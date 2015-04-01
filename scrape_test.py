@@ -7,6 +7,8 @@ import requests.packages.urllib3.contrib.pyopenssl
 requests.packages.urllib3.contrib.pyopenssl.inject_into_urllib3()
 from bs4 import BeautifulSoup
 import json
+from PIL import Image
+from StringIO import StringIO
 
 
 NUM_PAGES = 2#185
@@ -30,14 +32,21 @@ def get_images(info_soup,diags):
 		images[r["AssetId"]] = {"FileName" : r["FileName"], "diagnosis" : [diags[str(value['Id'])] for value in r["diagnosis"]]}
 	return (images)
 
+
 # download images with diagnosis
 def download_images(images):
-	for image in images:
+	for image in images.values():
 	    image_name = image["FileName"]
 	    url = 'https://www.dermquest.com/imagelibrary/thumb/'+image_name+'?height=110'
 	    r = requests.get(url)
-	    i = Image.open(StringIO(r.content))
-	    i.save(image_name+image["diagnosis"])
+	    diagnosis = ""
+	    for j in range(0,len(image["diagnosis"])):
+	    	diagnosis += image["diagnosis"][j]+"_" 
+	   	save_name = str(diagnosis+image_name).replace("/","")
+	    if r.status_code == 200:
+		    f = open(save_name, 'w')
+		    f.write(r.content)
+		    f.close()
 
 
 if __name__ == '__main__':
@@ -49,6 +58,6 @@ if __name__ == '__main__':
 	key_soup = BeautifulSoup(key_page.content)
 	diags = get_diagnoses(key_soup)
 	for i in range(1,NUM_PAGES+1):
-		images = get_images(info_soup)
-		donload_images(images)
+		images = get_images(info_soup,diags)
+		download_images(images)
 
