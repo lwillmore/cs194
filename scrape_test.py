@@ -49,6 +49,15 @@ def download_images(images):
 		    f.close()
 
 
+def record_metainfo(outfile, images):
+	for image in images.values():
+		image_name = image["FileName"]
+		diagnosis = ""
+		for j in range(0,len(image["diagnosis"])):
+	    	diagnosis += image["diagnosis"][j]+"_"
+	   	outfile.write("%s\t%s\n" % (image_name,diagnosis))
+
+
 if __name__ == '__main__':
 	info_url = 'https://www.dermquest.com/Services/imageData.ashx?localization=107988|107987|107989|107990|107991|107992|107993|107994|107995|107996|107997|107998|107999|108000|108001|108002|108003|108004|108005|108006|108007|108008|108009|108010|108011|108012|108013|108025|108024|108026|108031|108032|108033|108034|108035|108027|108028|108029|108030|108036|108038|108037|108055|108054|108056|108057|108058|108059|108060|108061|108062|108063|108064|108065|108068|108066|108067|108053|108039|108052|108051|108047|108048|108049|108050|108042|108043|108044|108045|108046|108040|108041|108015|108014|108016|108017|108018|108019|108020|108021|108022|108023&page=1&perPage=128'
 	info_page = requests.get(info_url)
@@ -57,7 +66,9 @@ if __name__ == '__main__':
 	key_page = requests.get(key_url)
 	key_soup = BeautifulSoup(key_page.content)
 	diags = get_diagnoses(key_soup)
+	outfile = open("dermQuestMetadata.txt","w")
 	for i in range(1,NUM_PAGES+1):
 		images = get_images(info_soup,diags)
-		download_images(images)
-
+		record_metainfo(outfile,images)
+		# download_images(images)
+	close(outfile)
