@@ -23,6 +23,16 @@ def get_diagnoses(key_soup):
 	return (diags)
 
 
+# build localization dictionary
+def get_loaclization(key_soup):
+	locs = {}
+	j_key = json.loads(str(key_soup.find_all('p')[0])[3:-4])
+	loc_facets = j_key['facet_collection']['localizations']['Facets']
+	for facet in loc_facets.keys():
+		locs[str(facet)] = loc_facets[str(facet)]['Text'].encode('ascii','ignore')
+	return (locs)
+
+
 # build list of pictures and diagnoses
 def get_images(info_soup,diags):
 	images = {}
@@ -47,12 +57,12 @@ def get_images(info_soup,diags):
 def download_images(images):
 	for image in images.values():
 		image_name = image["FileName"].encode('ascii','ignore')
-		url = 'https://www.dermquest.com/imagelibrary/thumb/'+image_name+'?height=110'
+		url = 'https://www.dermquest.com/imagelibrary/thumb/'+image_name+'?height=220'
 		r = requests.get(url)
 		diagnosis = ""
 		for j in range(0,len(image["diagnosis"])):
 			diagnosis += image["diagnosis"][j]+"_" 
-		save_name = str(diagnosis+image_name).replace("/","")
+		save_name = str(image_name).replace("/","")
 		if r.status_code == 200:
 			f = open(save_name, 'w')
 			f.write(r.content)
@@ -83,6 +93,6 @@ if __name__ == '__main__':
 		info_soup = BeautifulSoup(info_page.content)
 		images = get_images(info_soup,diags)
 		record_metainfo(outfile,images)
-		# download_images(images)
+		download_images(images)
 		print "Done with page %d" % (i)
 	outfile.close()
